@@ -35,12 +35,18 @@ st.title("薬物相互作用 計算ツール")
 uploaded_file = st.file_uploader("CSVファイルをアップロード", type=["csv"])
 df = None
 if uploaded_file:
-    try:
-        df = pd.read_csv(uploaded_file, encoding=None, skip_blank_lines=True, on_bad_lines='skip')
-        df.columns = df.columns.str.strip()  # 列名の余分なスペースを削除
-    except Exception as e:
-        st.error(f"CSVの読み込みに失敗しました: {e}")
-        df = None
+    encodings = ["utf-8", "shift_jis", "cp932"]
+    for enc in encodings:
+        try:
+            df = pd.read_csv(uploaded_file, encoding=enc, skip_blank_lines=True, on_bad_lines='skip')
+            df.columns = df.columns.str.strip()  # 列名の余分なスペースを削除
+            break  # 読み込み成功したらループを抜ける
+        except UnicodeDecodeError:
+            continue
+        except Exception as e:
+            st.error(f"CSVの読み込みに失敗しました: {e}")
+            df = None
+            break
     
     if df is not None and not df.empty:
         st.write("### CSVデータ")
@@ -126,14 +132,6 @@ if st.button("計算"):
         st.write("### 計算結果")
         for key, value in results.items():
             st.write(f"{key}: {value:.4f}")
-        
-        if "history" not in st.session_state:
-            st.session_state.history = []
-        st.session_state.history.append({**{"CR": CR, "IR": IR, "IC": IC, "AUCratio": AUCratio}, **results})
-        
-        st.write("### 過去の計算結果")
-        history_df = pd.DataFrame(st.session_state.history)
-        st.dataframe(history_df)
     else:
         st.warning("計算に必要な値を入力するか、適切な値を設定してください。")
 
