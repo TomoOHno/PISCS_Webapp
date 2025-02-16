@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 
 def calculate_auc_ratio(CR, IR):
     if CR * IR >= 1:
@@ -103,15 +101,8 @@ if st.button("計算"):
         st.warning("計算に必要な値を入力するか、適切な値を設定してください。")
 
 # Googleスプレッドシートからデータを取得
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-gc = gspread.authorize(credentials)
-
-spreadsheet_url = "https://docs.google.com/spreadsheets/d/1Bd5F6XkxNYO3b2UCm--Sr-P-QFUNqgF1RhfzaQqQ3xE/edit?usp=sharing"
-sheet = gc.open_by_url(spreadsheet_url).sheet1
-
-data = sheet.get_all_records()
-df = pd.DataFrame(data)
+spreadsheet_url = "https://docs.google.com/spreadsheets/d/1Bd5F6XkxNYO3b2UCm--Sr-P-QFUNqgF1RhfzaQqQ3xE/export?format=csv"
+df = pd.read_csv(spreadsheet_url)
 
 st.write("### Googleスプレッドシートデータ")
 st.dataframe(df)
