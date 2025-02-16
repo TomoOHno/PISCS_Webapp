@@ -63,7 +63,7 @@ if uploaded_file:
         st.warning("アップロードされたCSVファイルが空か、正しく読み込めませんでした。データを確認してください。")
     
     # 必要なカラムを表示
-    required_columns = {'分子種', '薬物名', '強い', '中等度'}
+    required_columns = {'分子種', '薬物名', 'CR', 'AUCratio', 'IR', 'IC'}
     if df is not None and required_columns.issubset(df.columns):
         st.write("### 抽出されたデータ")
         st.dataframe(df[list(required_columns)])
@@ -73,33 +73,23 @@ if uploaded_file:
         filtered_df = df[df['薬物名'] == selected_drug]
         st.write("### 選択された薬物の情報")
         
-        # 分子種や強度情報を表示
         if not filtered_df.empty:
             selected_data = filtered_df.iloc[0]
-            st.write(f"**分子種:** {selected_data['分子種']}")
-            st.write(f"**強い:** {selected_data['強い']}")
-            st.write(f"**中等度:** {selected_data['中等度']}")
+            st.session_state["CR"] = selected_data['CR']
+            st.session_state["AUCratio"] = selected_data['AUCratio']
+            st.session_state["IR"] = selected_data['IR']
+            st.session_state["IC"] = selected_data['IC']
         
         st.dataframe(filtered_df)
 
 # レイアウト調整
 col1, col2 = st.columns([2, 2])
 
-# セッションステートの初期化
-def reset_inputs():
-    st.session_state.clear()
-
-def init_session():
-    for key in ["CR", "AUCratio", "IR", "IC"]:
-        if key not in st.session_state:
-            st.session_state[key] = ""
-init_session()
-
-# 入力欄（デフォルト値を空欄に設定）
-CR = col1.text_input("CR (基質寄与率)", st.session_state["CR"], key="CR")
-AUCratio = col2.text_input("AUCratio", st.session_state["AUCratio"], key="AUCratio")
-IR = col1.text_input("IR (阻害率)", st.session_state["IR"], key="IR")
-IC = col2.text_input("IC (誘導率)", st.session_state["IC"], key="IC")
+# 入力欄（デフォルト値を空欄に設定、CSV選択時に自動反映）
+CR = col1.text_input("CR (基質寄与率)", st.session_state.get("CR", ""), key="CR")
+AUCratio = col2.text_input("AUCratio", st.session_state.get("AUCratio", ""), key="AUCratio")
+IR = col1.text_input("IR (阻害率)", st.session_state.get("IR", ""), key="IR")
+IC = col2.text_input("IC (誘導率)", st.session_state.get("IC", ""), key="IC")
 
 # 計算処理
 if st.button("計算"):
@@ -145,6 +135,5 @@ if st.button("計算"):
 
 # クリアボタンで計算前の状態に戻す
 if st.button("クリア"):
-    reset_inputs()
-    init_session()
+    st.session_state.clear()
     st.rerun()
