@@ -35,28 +35,37 @@ st.title("薬物相互作用 計算ツール")
 uploaded_file = st.file_uploader("CSVファイルをアップロード", type=["csv"])
 df = None
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    st.write("### CSVデータ")
-    st.dataframe(df)
+    try:
+        df = pd.read_csv(uploaded_file, encoding="utf-8")
+    except UnicodeDecodeError:
+        try:
+            df = pd.read_csv(uploaded_file, encoding="shift_jis")
+        except UnicodeDecodeError:
+            st.error("CSVファイルのエンコーディングを確認してください。UTF-8またはShift-JISで保存してください。")
+            df = None
     
-    # 必要なカラムを表示（仮に '分子種', '薬物名', '強い', '中等度' が含まれると想定）
-    if {'分子種', '薬物名', '強い', '中等度'}.issubset(df.columns):
-        st.write("### 抽出されたデータ")
-        st.dataframe(df[['分子種', '薬物名', '強い', '中等度']])
+    if df is not None:
+        st.write("### CSVデータ")
+        st.dataframe(df)
+    
+        # 必要なカラムを表示
+        if {'分子種', '薬物名', '強い', '中等度'}.issubset(df.columns):
+            st.write("### 抽出されたデータ")
+            st.dataframe(df[['分子種', '薬物名', '強い', '中等度']])
 
-        # 検索機能
-        selected_drug = st.selectbox("薬物名を選択", df['薬物名'].unique())
-        filtered_df = df[df['薬物名'] == selected_drug]
-        st.write("### 選択された薬物の情報")
-        
-        # 分子種や強度情報を表示
-        if not filtered_df.empty:
-            selected_data = filtered_df.iloc[0]
-            st.write(f"**分子種:** {selected_data['分子種']}")
-            st.write(f"**強い:** {selected_data['強い']}")
-            st.write(f"**中等度:** {selected_data['中等度']}")
-        
-        st.dataframe(filtered_df)
+            # 検索機能
+            selected_drug = st.selectbox("薬物名を選択", df['薬物名'].unique())
+            filtered_df = df[df['薬物名'] == selected_drug]
+            st.write("### 選択された薬物の情報")
+            
+            # 分子種や強度情報を表示
+            if not filtered_df.empty:
+                selected_data = filtered_df.iloc[0]
+                st.write(f"**分子種:** {selected_data['分子種']}")
+                st.write(f"**強い:** {selected_data['強い']}")
+                st.write(f"**中等度:** {selected_data['中等度']}")
+            
+            st.dataframe(filtered_df)
 
 # レイアウト調整
 col1, col2 = st.columns([2, 2])
