@@ -43,12 +43,20 @@ if uploaded_file:
             break  # 読み込み成功したらループを抜ける
         except UnicodeDecodeError:
             continue
+        except pd.errors.EmptyDataError:
+            st.error("CSVファイルが空です。データを確認してください。")
+            df = None
+            break
+        except pd.errors.ParserError:
+            st.error("CSVの解析に失敗しました。ヘッダーがない可能性があります。ヘッダー付きのCSVを使用するか、適切なフォーマットを確認してください。")
+            df = None
+            break
         except Exception as e:
             st.error(f"CSVの読み込みに失敗しました: {e}")
             df = None
             break
     
-    if df is not None and not df.empty:
+    if df is not None and not df.empty and df.shape[1] > 0:
         st.write("### CSVデータ")
         st.dataframe(df)
     else:
