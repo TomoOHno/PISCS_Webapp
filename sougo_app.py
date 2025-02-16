@@ -96,6 +96,12 @@ if st.button("計算"):
     else:
         st.warning("計算に必要な値を入力するか、適切な値を設定してください。")
 
+# クリアボタンを計算ボタンの下に配置
+if st.button("クリア"):
+    reset_inputs()
+    init_session()
+    st.rerun()
+
 # Googleスプレッドシートからデータを取得
 spreadsheet_url = "https://docs.google.com/spreadsheets/d/1Bd5F6XkxNYO3b2UCm--Sr-P-QFUNqgF1RhfzaQqQ3xE/export?format=csv"
 df = pd.read_csv(spreadsheet_url)
@@ -107,9 +113,3 @@ if drug_name:
 
 st.write("### Googleスプレッドシートデータ")
 st.dataframe(df)
-
-# クリアボタンで計算前の状態に戻す
-if st.button("クリア"):
-    reset_inputs()
-    init_session()
-    st.rerun()
