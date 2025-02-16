@@ -49,3 +49,13 @@ if not filtered_data.empty:
         file_name="drug_interaction_results.csv",
         mime="text/csv"
     )
+import streamlit as st
+import pandas as pd
+
+st.title("薬物相互作用データアップロード")
+
+uploaded_file = st.file_uploader("CSVファイルをアップロードしてください", type="csv")
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
+    df.to_csv("/mnt/data/processed_drug_interaction_data.csv", index=False, encoding="utf-8")
+    st.success("データが保存されました！")
