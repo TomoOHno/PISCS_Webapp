@@ -1,9 +1,20 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # CSVデータの読み込み
 data_path = "/mnt/data/processed_drug_interaction_data.csv"
-interaction_data = pd.read_csv(data_path)
+
+if os.path.exists(data_path):
+    interaction_data = pd.read_csv(data_path)
+else:
+    st.warning("データファイルが見つかりません。サンプルデータを使用します。")
+    interaction_data = pd.DataFrame({
+        "薬物名": ["フルボキサミン", "フルボキサミン"],
+        "分子種": ["CYP1A2", "CYP3A"],
+        "分類": ["阻害薬", "阻害薬"],
+        "強度": ["強い", "強い"]
+    })
 
 # Streamlitアプリの作成
 st.title("薬物相互作用検索ツール")
