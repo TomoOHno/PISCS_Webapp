@@ -37,19 +37,21 @@ df = None
 if uploaded_file:
     try:
         df = pd.read_csv(uploaded_file, encoding="utf-8")
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, pd.errors.EmptyDataError):
         try:
             df = pd.read_csv(uploaded_file, encoding="shift_jis")
-        except UnicodeDecodeError:
-            st.error("CSVファイルのエンコーディングを確認してください。UTF-8またはShift-JISで保存してください。")
+        except (UnicodeDecodeError, pd.errors.EmptyDataError):
+            st.error("CSVファイルのエンコーディングまたは内容を確認してください。UTF-8またはShift-JISで保存されていることを確認してください。")
             df = None
     
-    if df is not None:
+    if df is not None and not df.empty:
         st.write("### CSVデータ")
         st.dataframe(df)
+    else:
+        st.warning("アップロードされたCSVファイルが空です。適切なデータを含んでいるか確認してください。")
     
         # 必要なカラムを表示
-        if {'分子種', '薬物名', '強い', '中等度'}.issubset(df.columns):
+        if df is not None and {'分子種', '薬物名', '強い', '中等度'}.issubset(df.columns):
             st.write("### 抽出されたデータ")
             st.dataframe(df[['分子種', '薬物名', '強い', '中等度']])
 
