@@ -33,15 +33,22 @@ st.title("薬物相互作用 計算ツール")
 
 # CSVファイルのアップロード
 uploaded_file = st.file_uploader("CSVファイルをアップロード", type=["csv"])
+df = None
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
     st.write("### CSVデータ")
     st.dataframe(df)
     
-    # 必要なカラムを表示（仮に '分子種', '薬物名', 'その他の項目' が含まれると想定）
-    if {'分子種', '薬物名'}.issubset(df.columns):
+    # 必要なカラムを表示（仮に '分子種', '薬物名', '強い', '中等度' が含まれると想定）
+    if {'分子種', '薬物名', '強い', '中等度'}.issubset(df.columns):
         st.write("### 抽出されたデータ")
-        st.dataframe(df[['分子種', '薬物名']])
+        st.dataframe(df[['分子種', '薬物名', '強い', '中等度']])
+
+        # 検索機能
+        selected_drug = st.selectbox("薬物名を選択", df['薬物名'].unique())
+        filtered_df = df[df['薬物名'] == selected_drug]
+        st.write("### 選択された薬物の情報")
+        st.dataframe(filtered_df)
 
 # レイアウト調整
 col1, col2 = st.columns([2, 2])
