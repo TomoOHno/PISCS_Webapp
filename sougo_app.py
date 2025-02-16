@@ -1,6 +1,18 @@
 import streamlit as st
 import pandas as pd
+import os
 
+# CSVファイル名（Webアプリのフォルダ内に保存）
+CSV_FILE = "data.csv"
+
+# 事前に格納したCSVデータの読み込み
+@st.cache_data
+def load_csv_data():
+    if os.path.exists(CSV_FILE):
+        return pd.read_csv(CSV_FILE)
+    return pd.DataFrame()  # ファイルが存在しない場合は空のデータフレーム
+
+# 計算用関数
 def calculate_auc_ratio(CR, IR):
     if CR * IR >= 1 or CR < 0 or IR < 0:
         return None
@@ -56,7 +68,7 @@ IC = col2.number_input("IC (誘導率)", value=st.session_state["IC"], step=0.01
 # 計算処理
 if st.button("計算"):
     results = {}
-    
+
     if IR > 0 and IC == 0:
         if CR > 0 and IR > 0:
             results["AUCratio"] = calculate_auc_ratio(CR, IR)
@@ -64,7 +76,7 @@ if st.button("計算"):
             results["IR"] = calculate_ir(CR, AUCratio)
         if AUCratio > 0 and IR > 0:
             results["CR"] = calculate_cr_from_ir(AUCratio, IR)
-    
+
     if IC > 0 and IR == 0:
         if CR > 0 and IC > 0:
             results["AUCratio (誘導)"] = calculate_auc_ratio_ic(CR, IC)
@@ -72,30 +84,9 @@ if st.button("計算"):
             results["IC"] = calculate_ic(CR, AUCratio)
         if AUCratio > 0 and IC > 0:
             results["CR"] = calculate_cr_from_ic(AUCratio, IC)
-    
+
     if IR == 0 and IC == 0 and CR > 0 and AUCratio > 0:
         results["IR"] = calculate_ir(CR, AUCratio)
         results["IC"] = calculate_ic(CR, AUCratio)
-    
-    results = {k: v for k, v in results.items() if v is not None}  # 無効な値を除外
-    
-    if results:
-        st.write("### 計算結果")
-        for key, value in results.items():
-            st.write(f"{key}: {value:.4f}")
-        
-        # 過去の計算結果を記録
-        st.session_state.history.append({**{"CR": CR, "IR": IR, "IC": IC, "AUCratio": AUCratio}, **results})
-        
-        # 過去の計算結果を表示
-        st.write("### 過去の計算結果")
-        history_df = pd.DataFrame(st.session_state.history)
-        st.table(history_df)
-    else:
-        st.warning("計算に必要な値を入力するか、適切な値を設定してください。")
 
-# クリアボタンでリセット
-if st.button("クリア"):
-    reset_inputs()
-    init_session()
-    st.rerun()
+    results = {k: v for k, v in results.items() if v is not None} 
