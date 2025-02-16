@@ -47,8 +47,8 @@ init_session()
 # 入力欄（デフォルト値を空欄に設定）
 CR = col1.text_input("CR (基質寄与率)", st.session_state["CR"], key="CR")
 AUCratio = col2.text_input("AUCratio", st.session_state["AUCratio"], key="AUCratio")
-IR = col1.text_input("IR (阻害率) - IRを入力する場合、ICは空欄にしてください", st.session_state["IR"], key="IR")
-IC = col2.text_input("IC (誘導率) - ICを入力する場合、IRは空欄にしてください", st.session_state["IC"], key="IC")
+IR = col1.text_input("IR (阻害率)", st.session_state["IR"], key="IR")
+IC = col2.text_input("IC (誘導率)", st.session_state["IC"], key="IC")
 
 # 計算処理
 if st.button("計算"):
@@ -61,27 +61,27 @@ if st.button("計算"):
         st.warning("数値を正しく入力してください。")
         st.stop()
     
-    if IR > 0 and IC > 0:
-        st.warning("IRとICを同時に入力することはできません。どちらか一方を空欄にしてください。")
-        st.stop()
-    
     results = {}
     
-    if IR > 0:
-        if CR > 0:
+    if IR > 0 and IC == 0:
+        if CR > 0 and IR > 0:
             results["AUCratio"] = calculate_auc_ratio(CR, IR)
         if CR > 0 and AUCratio > 0:
             results["IR"] = calculate_ir(CR, AUCratio)
         if AUCratio > 0 and IR > 0:
             results["CR"] = calculate_cr_from_ir(AUCratio, IR)
     
-    if IC > 0:
-        if CR > 0:
+    if IC > 0 and IR == 0:
+        if CR > 0 and IC > 0:
             results["AUCratio (誘導)"] = calculate_auc_ratio_ic(CR, IC)
         if CR > 0 and AUCratio > 0:
             results["IC"] = calculate_ic(CR, AUCratio)
         if AUCratio > 0 and IC > 0:
             results["CR"] = calculate_cr_from_ic(AUCratio, IC)
+    
+    if IR == 0 and IC == 0 and CR > 0 and AUCratio > 0:
+        results["IR"] = calculate_ir(CR, AUCratio)
+        results["IC"] = calculate_ic(CR, AUCratio)
     
     results = {k: v for k, v in results.items() if v is not None}  # 無効な値を除外
     
