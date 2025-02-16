@@ -37,6 +37,11 @@ if uploaded_file:
     df = pd.read_csv(uploaded_file)
     st.write("### CSVデータ")
     st.dataframe(df)
+    
+    # 必要なカラムを表示（仮に '分子種', '薬物名', 'その他の項目' が含まれると想定）
+    if {'分子種', '薬物名'}.issubset(df.columns):
+        st.write("### 抽出されたデータ")
+        st.dataframe(df[['分子種', '薬物名']])
 
 # レイアウト調整
 col1, col2 = st.columns([2, 2])
