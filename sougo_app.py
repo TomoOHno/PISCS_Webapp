@@ -36,38 +36,37 @@ uploaded_file = st.file_uploader("CSVファイルをアップロード", type=["
 df = None
 if uploaded_file:
     try:
-        df = pd.read_csv(uploaded_file, encoding="utf-8")
-    except (UnicodeDecodeError, pd.errors.EmptyDataError):
-        try:
-            df = pd.read_csv(uploaded_file, encoding="shift_jis")
-        except (UnicodeDecodeError, pd.errors.EmptyDataError):
-            st.error("CSVファイルのエンコーディングまたは内容を確認してください。UTF-8またはShift-JISで保存されていることを確認してください。")
-            df = None
+        df = pd.read_csv(uploaded_file, encoding=None, skip_blank_lines=True, on_bad_lines='skip')
+        df.columns = df.columns.str.strip()  # 列名の余分なスペースを削除
+    except Exception as e:
+        st.error(f"CSVの読み込みに失敗しました: {e}")
+        df = None
     
     if df is not None and not df.empty:
         st.write("### CSVデータ")
         st.dataframe(df)
     else:
-        st.warning("アップロードされたCSVファイルが空です。適切なデータを含んでいるか確認してください。")
+        st.warning("アップロードされたCSVファイルが空か、正しく読み込めませんでした。データを確認してください。")
     
-        # 必要なカラムを表示
-        if df is not None and {'分子種', '薬物名', '強い', '中等度'}.issubset(df.columns):
-            st.write("### 抽出されたデータ")
-            st.dataframe(df[['分子種', '薬物名', '強い', '中等度']])
+    # 必要なカラムを表示
+    required_columns = {'分子種', '薬物名', '強い', '中等度'}
+    if df is not None and required_columns.issubset(df.columns):
+        st.write("### 抽出されたデータ")
+        st.dataframe(df[list(required_columns)])
 
-            # 検索機能
-            selected_drug = st.selectbox("薬物名を選択", df['薬物名'].unique())
-            filtered_df = df[df['薬物名'] == selected_drug]
-            st.write("### 選択された薬物の情報")
-            
-            # 分子種や強度情報を表示
-            if not filtered_df.empty:
-                selected_data = filtered_df.iloc[0]
-                st.write(f"**分子種:** {selected_data['分子種']}")
-                st.write(f"**強い:** {selected_data['強い']}")
-                st.write(f"**中等度:** {selected_data['中等度']}")
-            
-            st.dataframe(filtered_df)
+        # 検索機能
+        selected_drug = st.selectbox("薬物名を選択", df['薬物名'].dropna().unique())
+        filtered_df = df[df['薬物名'] == selected_drug]
+        st.write("### 選択された薬物の情報")
+        
+        # 分子種や強度情報を表示
+        if not filtered_df.empty:
+            selected_data = filtered_df.iloc[0]
+            st.write(f"**分子種:** {selected_data['分子種']}")
+            st.write(f"**強い:** {selected_data['強い']}")
+            st.write(f"**中等度:** {selected_data['中等度']}")
+        
+        st.dataframe(filtered_df)
 
 # レイアウト調整
 col1, col2 = st.columns([2, 2])
