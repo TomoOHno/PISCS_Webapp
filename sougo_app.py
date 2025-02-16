@@ -39,7 +39,7 @@ def reset_inputs():
     st.session_state.clear()
 
 def init_session():
-    for key in ["CR", "AUCratio", "IR", "IC"]:
+    for key in ["CR", "AUCratio", "IR", "IC", "drug_name"]:
         if key not in st.session_state:
             st.session_state[key] = ""
 init_session()
@@ -79,10 +79,6 @@ if st.button("計算"):
         if AUCratio > 0 and IC > 0:
             results["CR"] = calculate_cr_from_ic(AUCratio, IC)
     
-    if IR == 0 and IC == 0 and CR > 0 and AUCratio > 0:
-        results["IR"] = calculate_ir(CR, AUCratio)
-        results["IC"] = calculate_ic(CR, AUCratio)
-    
     results = {k: v for k, v in results.items() if v is not None}  # 無効な値を除外
     
     if results:
@@ -103,6 +99,11 @@ if st.button("計算"):
 # Googleスプレッドシートからデータを取得
 spreadsheet_url = "https://docs.google.com/spreadsheets/d/1Bd5F6XkxNYO3b2UCm--Sr-P-QFUNqgF1RhfzaQqQ3xE/export?format=csv"
 df = pd.read_csv(spreadsheet_url)
+
+# 薬物名でフィルタリング
+drug_name = st.text_input("薬物名で検索", st.session_state["drug_name"], key="drug_name")
+if drug_name:
+    df = df[df["薬物名"].str.contains(drug_name, na=False, case=False)]
 
 st.write("### Googleスプレッドシートデータ")
 st.dataframe(df)
