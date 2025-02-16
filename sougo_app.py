@@ -48,6 +48,14 @@ if uploaded_file:
         selected_drug = st.selectbox("薬物名を選択", df['薬物名'].unique())
         filtered_df = df[df['薬物名'] == selected_drug]
         st.write("### 選択された薬物の情報")
+        
+        # 分子種や強度情報を表示
+        if not filtered_df.empty:
+            selected_data = filtered_df.iloc[0]
+            st.write(f"**分子種:** {selected_data['分子種']}")
+            st.write(f"**強い:** {selected_data['強い']}")
+            st.write(f"**中等度:** {selected_data['中等度']}")
+        
         st.dataframe(filtered_df)
 
 # レイアウト調整
