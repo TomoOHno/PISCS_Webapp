@@ -31,57 +31,77 @@ def calculate_cr_from_ic(AUCratio, IC):
 
 st.title("薬物相互作用 計算ツール")
 
-# 入力欄
-CR = st.text_input("CR (基質寄与率)", "")
-AUCratio = st.text_input("AUCratio", "")
-IR = st.text_input("IR (阻害率)", "")
-IC = st.text_input("IC (誘導率)", "")
+# レイアウト調整
+col1, col2 = st.columns([2, 2])
+
+# セッションステートの初期化
+def reset_inputs():
+    st.session_state.clear()
+
+def init_session():
+    for key in ["CR", "AUCratio", "IR", "IC"]:
+        if key not in st.session_state:
+            st.session_state[key] = ""
+init_session()
+
+# 入力欄（デフォルト値を空欄に設定）
+CR = col1.text_input("CR (基質寄与率)", st.session_state["CR"], key="CR")
+AUCratio = col2.text_input("AUCratio", st.session_state["AUCratio"], key="AUCratio")
+IR = col1.text_input("IR (阻害率)", st.session_state["IR"], key="IR")
+IC = col2.text_input("IC (誘導率)", st.session_state["IC"], key="IC")
 
 # 計算処理
 if st.button("計算"):
     try:
-        CR = float(CR) if CR else None
-        AUCratio = float(AUCratio) if AUCratio else None
-        IR = float(IR) if IR else None
-        IC = float(IC) if IC else None
+        CR = float(st.session_state.CR) if st.session_state.CR else 0.0
+        AUCratio = float(st.session_state.AUCratio) if st.session_state.AUCratio else 0.0
+        IR = float(st.session_state.IR) if st.session_state.IR else 0.0
+        IC = float(st.session_state.IC) if st.session_state.IC else 0.0
     except ValueError:
         st.warning("数値を正しく入力してください。")
         st.stop()
     
     results = {}
-
-    # IRを使う場合
-    if IR is not None and IC is None:
-        if CR is not None and IR is not None:
+    
+    if IR > 0 and IC == 0:
+        if CR > 0 and IR > 0:
             results["AUCratio"] = calculate_auc_ratio(CR, IR)
-        if CR is not None and AUCratio is not None:
+        if CR > 0 and AUCratio > 0:
             results["IR"] = calculate_ir(CR, AUCratio)
-        if AUCratio is not None and IR is not None:
+        if AUCratio > 0 and IR > 0:
             results["CR"] = calculate_cr_from_ir(AUCratio, IR)
-
-    # ICを使う場合
-    if IC is not None and IR is None:
-        if CR is not None and IC is not None:
+    
+    if IC > 0 and IR == 0:
+        if CR > 0 and IC > 0:
             results["AUCratio (誘導)"] = calculate_auc_ratio_ic(CR, IC)
-        if CR is not None and AUCratio is not None:
+        if CR > 0 and AUCratio > 0:
             results["IC"] = calculate_ic(CR, AUCratio)
-        if AUCratio is not None and IC is not None:
+        if AUCratio > 0 and IC > 0:
             results["CR"] = calculate_cr_from_ic(AUCratio, IC)
-
-    # CRとAUCratioからIRとICを求める場合
-    if IR is None and IC is None and CR is not None and AUCratio is not None:
+    
+    if IR == 0 and IC == 0 and CR > 0 and AUCratio > 0:
         results["IR"] = calculate_ir(CR, AUCratio)
         results["IC"] = calculate_ic(CR, AUCratio)
-
-    # 計算結果を出力
+    
+    results = {k: v for k, v in results.items() if v is not None}  # 無効な値を除外
+    
     if results:
         st.write("### 計算結果")
         for key, value in results.items():
-            if value is not None:
-                st.write(f"{key}: {value:.4f}")
+            st.write(f"{key}: {value:.4f}")
+        
+        if "history" not in st.session_state:
+            st.session_state.history = []
+        st.session_state.history.append({**{"CR": CR, "IR": IR, "IC": IC, "AUCratio": AUCratio}, **results})
+        
+        st.write("### 過去の計算結果")
+        history_df = pd.DataFrame(st.session_state.history)
+        st.dataframe(history_df)
     else:
-        st.warning("計算に必要な値を入力してください。")
+        st.warning("計算に必要な値を入力するか、適切な値を設定してください。")
 
 # クリアボタンで計算前の状態に戻す
 if st.button("クリア"):
-    st.experimental_rerun()
+    reset_inputs()
+    init_session()
+    st.rerun()
