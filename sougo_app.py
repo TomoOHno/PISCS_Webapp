@@ -21,9 +21,9 @@ st.title("薬物相互作用検索ツール")
 
 # ユーザー入力
 search_drug = st.text_input("薬物名を入力:")
-selected_molecule = st.selectbox("分子種を選択:", ["", "CYP1A2", "CYP2C19", "CYP2D6", "CYP3A", "P-gp", "OATP1B1", "OATP1B3"])
-selected_classification = st.selectbox("分類を選択:", ["", "基質", "阻害薬", "誘導薬"])
-selected_strength = st.selectbox("強度を選択:", ["", "強い", "中等度"])
+selected_molecule = st.selectbox("分子種を選択:", sorted(interaction_data["分子種"].dropna().unique().tolist()))
+selected_classification = st.selectbox("分類を選択:", sorted(interaction_data["分類"].dropna().unique().tolist()))
+selected_strength = st.selectbox("強度を選択:", sorted(interaction_data["強度"].dropna().unique().tolist()))
 
 # フィルタリング処理
 filtered_data = interaction_data.copy()
