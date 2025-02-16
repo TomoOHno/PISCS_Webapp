@@ -40,44 +40,47 @@ IC = st.text_input("IC (誘導率)", "")
 # 計算処理
 if st.button("計算"):
     try:
-        CR = float(CR) if CR else 0.0
-        AUCratio = float(AUCratio) if AUCratio else 0.0
-        IR = float(IR) if IR else 0.0
-        IC = float(IC) if IC else 0.0
+        CR = float(CR) if CR else None
+        AUCratio = float(AUCratio) if AUCratio else None
+        IR = float(IR) if IR else None
+        IC = float(IC) if IC else None
     except ValueError:
         st.warning("数値を正しく入力してください。")
         st.stop()
     
     results = {}
-    
-    if IR > 0 and IC == 0:
-        if CR > 0 and IR > 0:
+
+    # IRを使う場合
+    if IR is not None and IC is None:
+        if CR is not None and IR is not None:
             results["AUCratio"] = calculate_auc_ratio(CR, IR)
-        if CR > 0 and AUCratio > 0:
+        if CR is not None and AUCratio is not None:
             results["IR"] = calculate_ir(CR, AUCratio)
-        if AUCratio > 0 and IR > 0:
+        if AUCratio is not None and IR is not None:
             results["CR"] = calculate_cr_from_ir(AUCratio, IR)
-    
-    if IC > 0 and IR == 0:
-        if CR > 0 and IC > 0:
+
+    # ICを使う場合
+    if IC is not None and IR is None:
+        if CR is not None and IC is not None:
             results["AUCratio (誘導)"] = calculate_auc_ratio_ic(CR, IC)
-        if CR > 0 and AUCratio > 0:
+        if CR is not None and AUCratio is not None:
             results["IC"] = calculate_ic(CR, AUCratio)
-        if AUCratio > 0 and IC > 0:
+        if AUCratio is not None and IC is not None:
             results["CR"] = calculate_cr_from_ic(AUCratio, IC)
-    
-    if IR == 0 and IC == 0 and CR > 0 and AUCratio > 0:
+
+    # CRとAUCratioからIRとICを求める場合
+    if IR is None and IC is None and CR is not None and AUCratio is not None:
         results["IR"] = calculate_ir(CR, AUCratio)
         results["IC"] = calculate_ic(CR, AUCratio)
-    
-    results = {k: v for k, v in results.items() if v is not None}  # 無効な値を除外
-    
+
+    # 計算結果を出力
     if results:
         st.write("### 計算結果")
         for key, value in results.items():
-            st.write(f"{key}: {value:.4f}")
+            if value is not None:
+                st.write(f"{key}: {value:.4f}")
     else:
-        st.warning("計算に必要な値を入力するか、適切な値を設定してください。")
+        st.warning("計算に必要な値を入力してください。")
 
 # クリアボタンで計算前の状態に戻す
 if st.button("クリア"):
